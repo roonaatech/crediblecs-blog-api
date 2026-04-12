@@ -2,6 +2,9 @@ import app from './src/app.js';
 import env from './src/config/env.js';
 import { testConnection } from './src/config/database.js';
 
+import https from 'https';
+import fs from 'fs';
+
 /**
  * CredibleCS Blog API Server
  * Entry point for the application.
@@ -11,19 +14,42 @@ async function startServer() {
     // Test database connection
     await testConnection();
 
-    // Start HTTP server
-    app.listen(env.port, () => {
+    const certPath = '/apps/crediblecs-api/src/certs';
+    const isDevelopment = env.nodeEnv === 'development';
+    
+    // Check if certificates exist (only for non-local dev)
+    let httpsOptions = null;
+    if (!isDevelopment && fs.existsSync(`${certPath}/server.key`) && fs.existsSync(`${certPath}/server.crt`)) {
+      httpsOptions = {
+        key: fs.readFileSync(`${certPath}/server.key`),
+        cert: fs.readFileSync(`${certPath}/server.crt`),
+      };
+      // Add CA if it exists
+      if (fs.existsSync(`${certPath}/server-ca.crt`)) {
+        httpsOptions.ca = fs.readFileSync(`${certPath}/server-ca.crt`);
+      }
+      console.log('🛡️  SSL Certificates loaded. Starting in HTTPS mode.');
+    }
+
+    const server = httpsOptions 
+      ? https.createServer(httpsOptions, app) 
+      : app;
+
+    server.listen(env.port, () => {
+      const protocol = httpsOptions ? 'https' : 'http';
+      const host = httpsOptions ? 'api.crediblecs.com' : 'localhost';
+      
       console.log(`
 ╔═══════════════════════════════════════════════╗
 ║                                               ║
 ║   🚀 CredibleCS Blog API Server              ║
 ║                                               ║
 ║   Environment : ${env.nodeEnv.padEnd(28)}║
+║   Protocol    : ${protocol.padEnd(28)}║
 ║   Port        : ${String(env.port).padEnd(28)}║
 ║   API Prefix  : ${env.api.prefix.padEnd(28)}║
-║   Database    : ${env.db.name.padEnd(28)}║
 ║                                               ║
-║   Health: http://localhost:${env.port}${env.api.prefix}/health  ║
+║   Docs: ${protocol}://${host}:${env.port}${env.api.prefix}/docs  ║
 ║                                               ║
 ╚═══════════════════════════════════════════════╝
       `);
