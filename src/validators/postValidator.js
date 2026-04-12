@@ -58,7 +58,7 @@ export const updatePostSchema = {
 export const listPostsSchema = {
   query: Joi.object({
     page: Joi.number().integer().min(1).default(1),
-    limit: Joi.number().integer().min(1).max(50).default(12),
+    limit: Joi.number().integer().min(1).max(1000).default(12),
     status: Joi.string().valid('draft', 'published', 'scheduled', 'archived'),
     category_id: Joi.number().integer().positive(),
     author_id: Joi.number().integer().positive(),
