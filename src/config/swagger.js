@@ -18,6 +18,10 @@ const options = {
         url: `http://localhost:${env.port}${env.api.prefix}`,
         description: 'Development server',
       },
+      {
+        url: `http://api.crediblecs.com:3001${env.api.prefix}`,
+        description: 'UAT Server',
+      },
     ],
     components: {
       securitySchemes: {

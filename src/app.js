@@ -20,6 +20,7 @@ const app = express();
 
 // HTTP security headers
 app.use(helmet({
+  contentSecurityPolicy: false, // Required for Swagger UI to work without extra config
   crossOriginResourcePolicy: { policy: "cross-origin" }
 }));
 
