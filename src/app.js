@@ -21,6 +21,7 @@ const app = express();
 // HTTP security headers
 app.use(helmet({
   contentSecurityPolicy: false, // Required for Swagger UI to work without extra config
+  hsts: false, // Required for non-SSL/HTTP environments to prevent browser forcing HTTPS
   crossOriginResourcePolicy: { policy: "cross-origin" }
 }));
 
