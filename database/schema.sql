@@ -185,5 +185,19 @@ CREATE TABLE IF NOT EXISTS comments (
   FOREIGN KEY (post_id)   REFERENCES posts(id)    ON DELETE CASCADE,
   FOREIGN KEY (parent_id) REFERENCES comments(id)  ON DELETE CASCADE,
   INDEX idx_comments_post (post_id, status),
-  INDEX idx_comments_parent (parent_id)
+-- ============================================
+-- 9. MEDIA (General library)
+-- ============================================
+CREATE TABLE IF NOT EXISTS media (
+  id            BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  filename      VARCHAR(255)    NOT NULL,
+  original_name VARCHAR(255)    NOT NULL,
+  mime_type     VARCHAR(100)    NOT NULL,
+  size          INT UNSIGNED    NOT NULL,
+  disk_path     VARCHAR(500)    NOT NULL,
+  public_url    VARCHAR(500)    NOT NULL,
+  uploaded_by   BIGINT UNSIGNED NULL,
+  created_at    TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (uploaded_by) REFERENCES authors(id) ON DELETE SET NULL,
+  INDEX idx_media_uploader (uploaded_by)
 ) ENGINE=InnoDB;

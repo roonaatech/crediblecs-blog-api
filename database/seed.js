@@ -36,7 +36,7 @@ async function seed() {
     await connection.query(seedData);
 
     // Show counts
-    const tables = ['authors', 'categories', 'tags', 'posts', 'post_tags'];
+    const tables = ['authors', 'categories', 'tags', 'posts', 'post_tags', 'media'];
     console.log('\n📊 Seed data summary:');
 
     for (const table of tables) {
