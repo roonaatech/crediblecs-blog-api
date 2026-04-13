@@ -4,6 +4,8 @@ import postRoutes from './postRoutes.js';
 import categoryRoutes from './categoryRoutes.js';
 import tagRoutes from './tagRoutes.js';
 import adminRoutes from './adminRoutes.js';
+import contactRoutes from './contactRoutes.js';
+import settingRoutes from './settingRoutes.js';
 
 const router = Router();
 
@@ -50,8 +52,12 @@ router.use('/auth', authRoutes);
 router.use('/posts', postRoutes);
 router.use('/categories', categoryRoutes);
 router.use('/tags', tagRoutes);
+router.use('/contact', contactRoutes);
 
 // Admin routes (all protected)
 router.use('/admin', adminRoutes);
+
+// Protected settings routes
+router.use('/settings', settingRoutes);
 
 export default router;

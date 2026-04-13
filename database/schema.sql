@@ -204,3 +204,28 @@ CREATE TABLE IF NOT EXISTS media (
   FOREIGN KEY (uploaded_by) REFERENCES authors(id) ON DELETE SET NULL,
   INDEX idx_media_uploader (uploaded_by)
 ) ENGINE=InnoDB;
+
+-- ============================================
+-- 10. SYSTEM_SETTINGS
+-- ============================================
+CREATE TABLE IF NOT EXISTS system_settings (
+  setting_key   VARCHAR(100) PRIMARY KEY,
+  setting_value JSON         NOT NULL,
+  description   TEXT         NULL,
+  updated_at    TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB;
+
+-- ============================================
+-- 11. CONTACT_SUBMISSIONS
+-- ============================================
+CREATE TABLE IF NOT EXISTS contact_submissions (
+  id           BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  name         VARCHAR(150) NOT NULL,
+  email        VARCHAR(255) NOT NULL,
+  phone        VARCHAR(50)  NOT NULL,
+  service      VARCHAR(100) NULL,
+  message      TEXT         NULL,
+  status       ENUM('new', 'contacted', 'resolved') DEFAULT 'new',
+  created_at   TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at   TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB;
