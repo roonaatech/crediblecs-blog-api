@@ -185,6 +185,9 @@ CREATE TABLE IF NOT EXISTS comments (
   FOREIGN KEY (post_id)   REFERENCES posts(id)    ON DELETE CASCADE,
   FOREIGN KEY (parent_id) REFERENCES comments(id)  ON DELETE CASCADE,
   INDEX idx_comments_post (post_id, status),
+  INDEX idx_comments_parent (parent_id)
+) ENGINE=InnoDB;
+
 -- ============================================
 -- 9. MEDIA (General library)
 -- ============================================
