@@ -2,6 +2,23 @@ import * as postModel from '../models/postModel.js';
 import { generateUniqueSlug } from '../utils/slugify.js';
 import { calculateReadingTime } from '../utils/readingTime.js';
 import { parsePagination, buildPagination } from '../utils/pagination.js';
+import axios from 'axios';
+
+/**
+ * Trigger frontend rebuild via webhook
+ */
+async function triggerFrontendRebuild() {
+  const webhookUrl = process.env.FRONTEND_REBUILD_WEBHOOK;
+  if (!webhookUrl) return;
+
+  try {
+    console.log('🚀 Triggering frontend rebuild...');
+    await axios.post(webhookUrl, { event_type: 'blog_update' });
+    console.log('✅ Rebuild trigger sent successfully');
+  } catch (err) {
+    console.error('❌ Failed to trigger frontend rebuild:', err.message);
+  }
+}
 
 /**
  * Post Service - Business logic for blog posts
@@ -153,7 +170,14 @@ export async function createPost(data, authorId) {
     await postModel.setPostTags(postId, data.tag_ids);
   }
 
-  return getPostById(postId);
+  const post = await getPostById(postId);
+  
+  // Trigger rebuild if published
+  if (post.status === 'published') {
+    triggerFrontendRebuild();
+  }
+
+  return post;
 }
 
 /**
@@ -210,7 +234,14 @@ export async function updatePost(id, data) {
     await postModel.setPostTags(id, data.tag_ids);
   }
 
-  return getPostById(id);
+  const updatedPost = await getPostById(id);
+
+  // Trigger rebuild if published or was published
+  if (updatedPost.status === 'published' || existingPost.status === 'published') {
+    triggerFrontendRebuild();
+  }
+
+  return updatedPost;
 }
 
 /**
@@ -223,6 +254,12 @@ export async function deletePost(id) {
   }
 
   await postModel.softDelete(id);
+  
+  // Trigger rebuild if it was published
+  if (post.status === 'published') {
+    triggerFrontendRebuild();
+  }
+
   return { message: 'Post deleted successfully.' };
 }
 
@@ -245,6 +282,10 @@ export async function updatePostStatus(id, status, scheduledAt) {
   }
 
   await postModel.update(id, updateData);
+  
+  // Trigger rebuild
+  triggerFrontendRebuild();
+
   return getPostById(id);
 }
 
