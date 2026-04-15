@@ -16,7 +16,9 @@ async function startServer() {
 
     const certPath = '/apps/crediblecs-api/src/certs';
     const isDevelopment = env.nodeEnv === 'development';
-    
+    const isTesting = env.nodeEnv === 'testing';
+    const isProduction = env.nodeEnv === 'production';
+
     // Check if certificates exist (only for non-local dev)
     let httpsOptions = null;
     if (!isDevelopment && fs.existsSync(`${certPath}/server.key`) && fs.existsSync(`${certPath}/server.crt`)) {
@@ -31,14 +33,18 @@ async function startServer() {
       console.log('🛡️  SSL Certificates loaded. Starting in HTTPS mode.');
     }
 
-    const server = httpsOptions 
-      ? https.createServer(httpsOptions, app) 
+    const server = httpsOptions
+      ? https.createServer(httpsOptions, app)
       : app;
 
     server.listen(env.port, () => {
       const protocol = httpsOptions ? 'https' : 'http';
-      const host = httpsOptions ? 'api.crediblecs.com' : 'localhost';
-      
+      const host = isProduction
+        ? 'ccs-api.crediblecs.com'
+        : isTesting
+          ? 'ccs-api-dev.crediblecs.com'
+          : 'localhost';
+
       console.log(`
 ╔═══════════════════════════════════════════════╗
 ║                                               ║
