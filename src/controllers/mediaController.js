@@ -17,7 +17,9 @@ export const uploadMedia = async (req, res, next) => {
     // Process image with Sharp (optional: resize or convert to webp)
     // For now, let's keep it simple.
     
-    const publicUrl = `/uploads/${filename}`;
+    // Build an absolute public URL so images always resolve correctly from any frontend
+    const baseUrl = (process.env.SERVER_URL || `http://localhost:${env.port}`).replace(/\/$/, '');
+    const publicUrl = `${baseUrl}/uploads/${filename}`;
     const diskPath = req.file.path;
 
     // Save to DB
