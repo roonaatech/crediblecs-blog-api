@@ -11,6 +11,8 @@ export const createPostSchema = {
     content: Joi.string().min(50).required()
       .messages({ 'string.min': 'Content must be at least 50 characters' }),
     content_format: Joi.string().valid('html', 'markdown').default('html'),
+    slug: Joi.string().max(300).pattern(/^[a-z0-9-]+$/).allow('', null)
+      .messages({ 'string.pattern.base': 'Slug can only contain lowercase letters, numbers, and hyphens' }),
     excerpt: Joi.string().max(500).allow('', null),
     meta_title: Joi.string().max(200).allow('', null),
     meta_description: Joi.string().max(320).allow('', null),
@@ -36,6 +38,8 @@ export const updatePostSchema = {
     title: Joi.string().min(5).max(300),
     content: Joi.string().min(50),
     content_format: Joi.string().valid('html', 'markdown'),
+    slug: Joi.string().max(300).pattern(/^[a-z0-9-]+$/).allow('', null)
+      .messages({ 'string.pattern.base': 'Slug can only contain lowercase letters, numbers, and hyphens' }),
     excerpt: Joi.string().max(500).allow('', null),
     meta_title: Joi.string().max(200).allow('', null),
     meta_description: Joi.string().max(320).allow('', null),

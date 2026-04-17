@@ -206,14 +206,11 @@ export async function findRelated(postId, categoryId, limit = 4) {
     WHERE p.id != ? 
       AND p.is_deleted = FALSE 
       AND p.status = 'published'
-      AND (
-        p.category_id = ?
-        OR pt.tag_id IN (SELECT tag_id FROM post_tags WHERE post_id = ?)
-      )
+      AND p.category_id = ?
     ORDER BY p.published_at DESC
     LIMIT ?
   `;
-  return query(sql, [postId, categoryId, postId, limit]);
+  return query(sql, [postId, categoryId, limit]);
 }
 
 /**

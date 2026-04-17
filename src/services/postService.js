@@ -88,8 +88,8 @@ export async function getPostBySlug(slug) {
   // Get tags
   const tags = await postModel.findPostTags(post.id);
 
-  // Get related posts
-  const related = await postModel.findRelated(post.id, post.category_id);
+  // Get related posts (5 latest from same category/tags)
+  const related = await postModel.findRelated(post.id, post.category_id, 5);
 
   return {
     ...post,
@@ -116,8 +116,13 @@ export async function getPostById(id) {
  * Create a new blog post
  */
 export async function createPost(data, authorId) {
-  // Generate unique slug from title
-  const slug = await generateUniqueSlug(data.title, 'posts');
+  // Use custom slug if provided, otherwise auto-generate from title
+  let slug;
+  if (data.slug && data.slug.trim()) {
+    slug = await generateUniqueSlug(data.slug, 'posts');
+  } else {
+    slug = await generateUniqueSlug(data.title, 'posts');
+  }
 
   // Calculate reading time
   const { minutes, words } = calculateReadingTime(data.content);
@@ -167,10 +172,18 @@ export async function updatePost(id, data) {
 
   const updateData = {};
 
-  // Handle title/slug change
+  // Handle title change → regenerate slug only if no custom slug provided
   if (data.title && data.title !== existingPost.title) {
     updateData.title = data.title;
-    updateData.slug = await generateUniqueSlug(data.title, 'posts', id);
+    // Only auto-generate slug from new title if user didn't provide a custom slug
+    if (!data.slug) {
+      updateData.slug = await generateUniqueSlug(data.title, 'posts', id);
+    }
+  }
+
+  // Handle custom slug override
+  if (data.slug && data.slug.trim()) {
+    updateData.slug = await generateUniqueSlug(data.slug, 'posts', id);
   }
 
   // Handle content change → recalculate reading time
