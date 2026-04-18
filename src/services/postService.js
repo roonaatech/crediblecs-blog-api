@@ -332,3 +332,128 @@ export async function getPostsByTag(tagSlug, queryParams) {
 export async function getDashboardStats() {
   return postModel.getStats();
 }
+
+/**
+ * Manually trigger website rebuild
+ */
+export async function triggerManualRebuild(branch = 'develop') {
+  return new Promise((resolve, reject) => {
+    const webhookUrl = env.frontendRebuildWebhook;
+    if (!webhookUrl) {
+      reject(new Error('Frontend rebuild webhook not configured'));
+      return;
+    }
+
+    const token = env.githubRebuildToken;
+    if (!token) {
+      reject(new Error('GitHub rebuild token not configured'));
+      return;
+    }
+
+    fetch(webhookUrl, {
+      method: 'POST',
+      headers: {
+        'Accept': 'application/vnd.github+json',
+        'Authorization': `token ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ ref: branch }),
+    })
+    .then(async (res) => {
+      if (!res.ok) {
+        const errorText = await res.text();
+        console.error(`[rebuild] GitHub workflow dispatch failed ${res.status}: ${errorText}`);
+        reject(new Error(`GitHub API error: ${res.status} - ${errorText}`));
+      } else {
+        console.log(`[rebuild] GitHub workflow dispatch triggered on ${branch}`);
+        resolve({ success: true, branch, message: `Workflow triggered on ${branch} branch` });
+      }
+    })
+    .catch(err => {
+      console.error('[rebuild] Network error:', err.message);
+      reject(new Error(`Network error: ${err.message}`));
+    });
+  });
+}
+
+/**
+ * Get current sync status
+ */
+export async function getSyncStatus() {
+  const webhookUrl = env.frontendRebuildWebhook;
+  if (!webhookUrl) {
+    return { status: 'not_configured', message: 'Webhook not configured' };
+  }
+
+  const token = env.githubRebuildToken;
+  if (!token) {
+    return { status: 'not_configured', message: 'GitHub token not configured' };
+  }
+
+  try {
+    // Extract repo info from webhook URL
+    const urlMatch = webhookUrl.match(/repos\/([^\/]+)\/([^\/]+)\/actions\/workflows/);
+    if (!urlMatch) {
+      return { status: 'error', message: 'Invalid webhook URL format' };
+    }
+
+    const [, owner, repo] = urlMatch;
+    const workflowsUrl = `https://api.github.com/repos/${owner}/${repo}/actions/runs?per_page=5`;
+
+    const response = await fetch(workflowsUrl, {
+      headers: {
+        'Accept': 'application/vnd.github+json',
+        'Authorization': `token ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      return { status: 'error', message: `GitHub API error: ${response.status}` };
+    }
+
+    const data = await response.json();
+    const runs = data.workflow_runs || [];
+
+    // Find the most recent run for our workflow
+    const deployRuns = runs.filter(run =>
+      run.name === 'Build and Deploy to Hostinger FTP' &&
+      ['in_progress', 'queued', 'completed'].includes(run.status)
+    );
+
+    if (deployRuns.length === 0) {
+      return { status: 'idle', message: 'No recent workflow runs found' };
+    }
+
+    const latestRun = deployRuns[0];
+
+    return {
+      status: latestRun.status,
+      conclusion: latestRun.conclusion,
+      branch: latestRun.head_branch,
+      created_at: latestRun.created_at,
+      updated_at: latestRun.updated_at,
+      html_url: latestRun.html_url,
+      message: getStatusMessage(latestRun.status, latestRun.conclusion)
+    };
+
+  } catch (err) {
+    console.error('[sync] Status check error:', err);
+    return { status: 'error', message: `Error checking status: ${err.message}` };
+  }
+}
+
+function getStatusMessage(status, conclusion) {
+  if (status === 'in_progress' || status === 'queued') {
+    return 'Workflow is running...';
+  }
+  if (status === 'completed') {
+    if (conclusion === 'success') {
+      return 'Workflow completed successfully!';
+    }
+    if (conclusion === 'failure') {
+      return 'Workflow failed. Check GitHub Actions for details.';
+    }
+    return `Workflow completed with status: ${conclusion}`;
+  }
+  return `Workflow status: ${status}`;
+}

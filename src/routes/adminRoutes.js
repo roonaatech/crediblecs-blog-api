@@ -322,4 +322,44 @@ router.post('/tags', validate(createTagSchema), catTagController.createTag);
  */
 router.delete('/tags/:id', catTagController.deleteTag);
 
+// ============ SYNC ROUTES ============
+
+/**
+ * @openapi
+ * /admin/sync/trigger:
+ *   post:
+ *     summary: Manually trigger website rebuild
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               branch:
+ *                 type: string
+ *                 enum: [develop, release]
+ *                 default: develop
+ *     responses:
+ *       200:
+ *         description: Sync triggered successfully
+ */
+router.post('/sync/trigger', postController.triggerSync);
+
+/**
+ * @openapi
+ * /admin/sync/status:
+ *   get:
+ *     summary: Get current sync status
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Current sync status
+ */
+router.get('/sync/status', postController.getSyncStatus);
+
 export default router;

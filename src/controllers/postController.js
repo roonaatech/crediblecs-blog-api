@@ -166,3 +166,28 @@ export async function dashboardStats(req, res, next) {
     next(err);
   }
 }
+
+/**
+ * POST /api/v1/admin/sync/trigger - Manually trigger website rebuild
+ */
+export async function triggerSync(req, res, next) {
+  try {
+    const branch = req.body?.branch || getRebuildBranch(req);
+    await postService.triggerManualRebuild(branch);
+    return success(res, { message: `Sync triggered for ${branch} branch`, branch });
+  } catch (err) {
+    next(err);
+  }
+}
+
+/**
+ * GET /api/v1/admin/sync/status - Get current sync status
+ */
+export async function getSyncStatus(req, res, next) {
+  try {
+    const status = await postService.getSyncStatus();
+    return success(res, status);
+  } catch (err) {
+    next(err);
+  }
+}
