@@ -104,21 +104,23 @@ export async function getById(req, res, next) {
  */
 export async function create(req, res, next) {
   try {
-      const branch = getRebuildBranch(req);
-      const post = await postService.createPost(req.body, req.user.id, branch);
-      return created(res, post);
-    } catch (err) {
-      next(err);
-    }
+    const branch = getRebuildBranch(req);
+    const post = await postService.createPost(req.body, req.user.id, branch);
+    return created(res, post);
+  } catch (err) {
+    next(err);
+  }
 }
 
 /**
  * PUT /api/v1/admin/posts/:id - Update post
  */
 export async function update(req, res, next) {
-    try {
-      const branch = getRebuildBranch(req);
-      const post = await postService.updatePost(parseInt(req.params.id, 10), req.body, branch);
+  try {
+    const branch = getRebuildBranch(req);
+    const post = await postService.updatePost(parseInt(req.params.id, 10), req.body, branch);
+    return success(res, post);
+  } catch (err) {
     next(err);
   }
 }
@@ -140,12 +142,14 @@ export async function remove(req, res, next) {
  */
 export async function updateStatus(req, res, next) {
   try {
-      const branch = getRebuildBranch(req);
-      const post = await postService.updatePostStatus(
-        parseInt(req.params.id, 10),
-        req.body.status,
-        req.body.scheduled_at,
-        branch
+    const branch = getRebuildBranch(req);
+    const post = await postService.updatePostStatus(
+      parseInt(req.params.id, 10),
+      req.body.status,
+      req.body.scheduled_at,
+      branch
+    );
+    return success(res, post);
   } catch (err) {
     next(err);
   }
