@@ -180,7 +180,7 @@ export async function createPost(data, authorId, targetBranch = 'develop') {
   }
 
   const created = await getPostById(postId);
-  triggerRebuild(targetBranch);
+  // Removed automatic triggerRebuild - manual sync only
   return created;
 }
 
@@ -247,7 +247,7 @@ export async function updatePost(id, data, targetBranch = 'develop') {
   }
 
   const updated = await getPostById(id);
-  triggerRebuild(targetBranch);
+  // Removed automatic triggerRebuild - manual sync only
   return updated;
 }
 
@@ -284,7 +284,7 @@ export async function updatePostStatus(id, status, scheduledAt, targetBranch = '
 
   await postModel.update(id, updateData);
   const updated = await getPostById(id);
-  triggerRebuild(targetBranch);
+  // Removed automatic triggerRebuild - manual sync only
   return updated;
 }
 
