@@ -16,7 +16,12 @@ function triggerRebuild() {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({ event_type: 'blog_update' }),
-  }).catch(() => {});
+  })
+    .then(res => {
+      if (!res.ok) res.text().then(t => console.error(`[rebuild] GitHub dispatch failed ${res.status}: ${t}`));
+      else console.log('[rebuild] GitHub dispatch triggered successfully');
+    })
+    .catch(err => console.error('[rebuild] Network error:', err.message));
 }
 
 /**
