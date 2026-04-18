@@ -64,13 +64,26 @@ export const deleteMedia = async (req, res, next) => {
     const { id } = req.params;
 
     // Get file info from DB
-    const [rows] = await pool.execute('SELECT disk_path FROM media WHERE id = ?', [id]);
+    const [rows] = await pool.execute('SELECT disk_path, public_url FROM media WHERE id = ?', [id]);
     
     if (rows.length === 0) {
       return res.status(404).json({ error: 'Media not found' });
     }
 
-    const { disk_path } = rows[0];
+    const { disk_path, public_url } = rows[0];
+
+    // Check if this image is used in any published or draft post
+    const [usageRows] = await pool.execute(
+      'SELECT COUNT(*) as count FROM posts WHERE featured_image_url = ? AND status IN (?, ?)',
+      [public_url, 'published', 'draft']
+    );
+
+    if (usageRows[0].count > 0) {
+      return res.status(400).json({ 
+        success: false,
+        error: `This image is being used in ${usageRows[0].count} post(s). Please remove it from all posts before deleting.` 
+      });
+    }
 
     // Delete from disk
     if (fs.existsSync(disk_path)) {
@@ -80,7 +93,7 @@ export const deleteMedia = async (req, res, next) => {
     // Delete from DB
     await pool.execute('DELETE FROM media WHERE id = ?', [id]);
 
-    res.status(204).send();
+    res.status(200).json({ success: true, message: 'Media deleted successfully' });
   } catch (error) {
     next(error);
   }
