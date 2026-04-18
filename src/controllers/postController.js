@@ -1,6 +1,22 @@
 import * as postService from '../services/postService.js';
 import { success, created, paginated, noContent } from '../utils/response.js';
 
+function getRebuildBranch(req) {
+  if (req.body?.build_branch) {
+    return req.body.build_branch;
+  }
+
+  const origin = (req.get('origin') || req.get('host') || '').toLowerCase();
+  if (origin.includes('demo.crediblecs.com')) {
+    return 'develop';
+  }
+  if (origin.includes('crediblecs.com')) {
+    return 'release';
+  }
+
+  return 'develop';
+}
+
 /**
  * Post Controller
  */
@@ -88,21 +104,21 @@ export async function getById(req, res, next) {
  */
 export async function create(req, res, next) {
   try {
-    const post = await postService.createPost(req.body, req.user.id);
-    return created(res, post);
-  } catch (err) {
-    next(err);
-  }
+      const branch = getRebuildBranch(req);
+      const post = await postService.createPost(req.body, req.user.id, branch);
+      return created(res, post);
+    } catch (err) {
+      next(err);
+    }
 }
 
 /**
  * PUT /api/v1/admin/posts/:id - Update post
  */
 export async function update(req, res, next) {
-  try {
-    const post = await postService.updatePost(parseInt(req.params.id, 10), req.body);
-    return success(res, post);
-  } catch (err) {
+    try {
+      const branch = getRebuildBranch(req);
+      const post = await postService.updatePost(parseInt(req.params.id, 10), req.body, branch);
     next(err);
   }
 }
@@ -124,12 +140,12 @@ export async function remove(req, res, next) {
  */
 export async function updateStatus(req, res, next) {
   try {
-    const post = await postService.updatePostStatus(
-      parseInt(req.params.id, 10),
-      req.body.status,
-      req.body.scheduled_at
-    );
-    return success(res, post);
+      const branch = getRebuildBranch(req);
+      const post = await postService.updatePostStatus(
+        parseInt(req.params.id, 10),
+        req.body.status,
+        req.body.scheduled_at,
+        branch
   } catch (err) {
     next(err);
   }

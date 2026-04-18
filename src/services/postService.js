@@ -4,7 +4,7 @@ import { calculateReadingTime } from '../utils/readingTime.js';
 import { parsePagination, buildPagination } from '../utils/pagination.js';
 import env from '../config/env.js';
 
-function triggerRebuild() {
+function triggerRebuild(branch = 'develop') {
   const webhookUrl = env.frontendRebuildWebhook;
   if (!webhookUrl) return;
   const token = env.githubRebuildToken;
@@ -12,14 +12,14 @@ function triggerRebuild() {
     method: 'POST',
     headers: {
       'Accept': 'application/vnd.github+json',
-      'Authorization': `Bearer ${token}`,
+      'Authorization': `token ${token}`,
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({ event_type: 'blog_update' }),
+    body: JSON.stringify({ ref: branch }),
   })
     .then(res => {
-      if (!res.ok) res.text().then(t => console.error(`[rebuild] GitHub dispatch failed ${res.status}: ${t}`));
-      else console.log('[rebuild] GitHub dispatch triggered successfully');
+      if (!res.ok) res.text().then(t => console.error(`[rebuild] GitHub workflow dispatch failed ${res.status}: ${t}`));
+      else console.log(`[rebuild] GitHub workflow dispatch triggered on ${branch}`);
     })
     .catch(err => console.error('[rebuild] Network error:', err.message));
 }
@@ -136,7 +136,7 @@ export async function getPostById(id) {
 /**
  * Create a new blog post
  */
-export async function createPost(data, authorId) {
+export async function createPost(data, authorId, targetBranch = 'develop') {
   // Use custom slug if provided, otherwise auto-generate from title
   let slug;
   if (data.slug && data.slug.trim()) {
@@ -179,13 +179,15 @@ export async function createPost(data, authorId) {
     await postModel.setPostTags(postId, data.tag_ids);
   }
 
-  return getPostById(postId);
+  const created = await getPostById(postId);
+  triggerRebuild(targetBranch);
+  return created;
 }
 
 /**
  * Update an existing blog post
  */
-export async function updatePost(id, data) {
+export async function updatePost(id, data, targetBranch = 'develop') {
   const existingPost = await postModel.findById(id);
   if (!existingPost) {
     throw Object.assign(new Error('Blog post not found.'), { statusCode: 404 });
@@ -245,7 +247,7 @@ export async function updatePost(id, data) {
   }
 
   const updated = await getPostById(id);
-  triggerRebuild();
+  triggerRebuild(targetBranch);
   return updated;
 }
 
@@ -265,7 +267,7 @@ export async function deletePost(id) {
 /**
  * Update post status
  */
-export async function updatePostStatus(id, status, scheduledAt) {
+export async function updatePostStatus(id, status, scheduledAt, targetBranch = 'develop') {
   const post = await postModel.findById(id);
   if (!post) {
     throw Object.assign(new Error('Blog post not found.'), { statusCode: 404 });
@@ -282,7 +284,7 @@ export async function updatePostStatus(id, status, scheduledAt) {
 
   await postModel.update(id, updateData);
   const updated = await getPostById(id);
-  triggerRebuild();
+  triggerRebuild(targetBranch);
   return updated;
 }
 
