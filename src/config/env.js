@@ -45,6 +45,7 @@ const env = {
   // Frontend
   frontendUrl: process.env.FRONTEND_URL || 'http://localhost:4321',
   frontendRebuildWebhook: process.env.FRONTEND_REBUILD_WEBHOOK || '',
+  githubRebuildToken: process.env.GITHUB_REBUILD_TOKEN || '',
 };
 
 export default env;

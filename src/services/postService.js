@@ -2,6 +2,22 @@ import * as postModel from '../models/postModel.js';
 import { generateUniqueSlug } from '../utils/slugify.js';
 import { calculateReadingTime } from '../utils/readingTime.js';
 import { parsePagination, buildPagination } from '../utils/pagination.js';
+import env from '../config/env.js';
+
+function triggerRebuild() {
+  const webhookUrl = env.frontendRebuildWebhook;
+  if (!webhookUrl) return;
+  const token = env.githubRebuildToken;
+  fetch(webhookUrl, {
+    method: 'POST',
+    headers: {
+      'Accept': 'application/vnd.github+json',
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ event_type: 'blog_update' }),
+  }).catch(() => {});
+}
 
 /**
  * Post Service - Business logic for blog posts
@@ -223,7 +239,9 @@ export async function updatePost(id, data) {
     await postModel.setPostTags(id, data.tag_ids);
   }
 
-  return getPostById(id);
+  const updated = await getPostById(id);
+  triggerRebuild();
+  return updated;
 }
 
 /**
@@ -258,7 +276,9 @@ export async function updatePostStatus(id, status, scheduledAt) {
   }
 
   await postModel.update(id, updateData);
-  return getPostById(id);
+  const updated = await getPostById(id);
+  triggerRebuild();
+  return updated;
 }
 
 /**
