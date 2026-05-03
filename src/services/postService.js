@@ -221,7 +221,7 @@ export async function updatePost(id, data, targetBranch = 'develop') {
   if (data.status) {
     updateData.status = data.status;
     if (data.status === 'published' && !existingPost.published_at) {
-      updateData.published_at = new Date().toISOString().slice(0, 19).replace('T', ' ');
+      updateData.published_at = new Date();
     }
   }
 
@@ -229,12 +229,19 @@ export async function updatePost(id, data, targetBranch = 'develop') {
   const directFields = [
     'excerpt', 'content_format', 'meta_title', 'meta_description',
     'og_image_url', 'canonical_url', 'featured_image_url', 'featured_image_alt',
-    'category_id', 'scheduled_at', 'is_featured', 'allow_comments',
+    'category_id', 'is_featured', 'allow_comments',
   ];
   for (const field of directFields) {
     if (data[field] !== undefined) {
       updateData[field] = data[field];
     }
+  }
+
+  // Convert scheduled_at ISO string to Date so postModel.update() uses CONVERT_TZ
+  if (data.scheduled_at) {
+    updateData.scheduled_at = new Date(data.scheduled_at);
+  } else if (data.scheduled_at === null) {
+    updateData.scheduled_at = null;
   }
 
   if (Object.keys(updateData).length > 0) {
@@ -276,10 +283,10 @@ export async function updatePostStatus(id, status, scheduledAt, targetBranch = '
   const updateData = { status };
 
   if (status === 'published' && !post.published_at) {
-    updateData.published_at = new Date().toISOString().slice(0, 19).replace('T', ' ');
+    updateData.published_at = new Date();
   }
   if (status === 'scheduled' && scheduledAt) {
-    updateData.scheduled_at = scheduledAt;
+    updateData.scheduled_at = new Date(scheduledAt);
   }
 
   await postModel.update(id, updateData);

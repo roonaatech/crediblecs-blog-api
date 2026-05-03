@@ -1,6 +1,7 @@
 import app from './src/app.js';
 import env from './src/config/env.js';
 import { testConnection } from './src/config/database.js';
+import { startPostScheduler } from './src/scheduler/postScheduler.js';
 
 import https from 'https';
 import fs from 'fs';
@@ -13,6 +14,7 @@ async function startServer() {
   try {
     // Test database connection
     await testConnection();
+    startPostScheduler();
 
     const certPath = '/apps/crediblecs-api/src/certs';
     const isDevelopment = env.nodeEnv === 'development';

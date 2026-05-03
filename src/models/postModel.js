@@ -247,8 +247,13 @@ export async function update(id, postData) {
   const values = [];
 
   for (const [key, value] of Object.entries(postData)) {
-    fields.push(`${key} = ?`);
-    values.push(value);
+    if (value instanceof Date) {
+      fields.push(`${key} = CONVERT_TZ(?, '+00:00', @@session.time_zone)`);
+      values.push(value.toISOString().replace('T', ' ').slice(0, 19));
+    } else {
+      fields.push(`${key} = ?`);
+      values.push(value);
+    }
   }
 
   if (fields.length === 0) return 0;
@@ -256,6 +261,14 @@ export async function update(id, postData) {
   values.push(id);
   const sql = `UPDATE posts SET ${fields.join(', ')} WHERE id = ? AND is_deleted = FALSE`;
   return execute(sql, values);
+}
+
+/**
+ * Find scheduled posts whose scheduled_at time has passed
+ */
+export async function findScheduledToPublish() {
+  const sql = `SELECT id FROM posts WHERE status = 'scheduled' AND scheduled_at <= UTC_TIMESTAMP() AND is_deleted = FALSE`;
+  return query(sql);
 }
 
 /**

@@ -16,10 +16,17 @@ const pool = mysql.createPool({
   queueLimit: 0,
   enableKeepAlive: true,
   keepAliveInitialDelay: 0,
+  timezone: 'Z',           // Serialize JS Date params as UTC strings
   // Return dates as strings to avoid timezone issues
   dateStrings: true,
   // Support multiple statements for setup scripts
   multipleStatements: false,
+});
+
+// Force every connection to use UTC so TIMESTAMP values are stored and returned in UTC,
+// regardless of the MySQL server's system timezone.
+pool.on('connection', (conn) => {
+  conn.query("SET time_zone = '+00:00'");
 });
 
 /**
