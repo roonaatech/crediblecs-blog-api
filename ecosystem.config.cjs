@@ -1,7 +1,7 @@
 module.exports = {
   apps: [
     {
-      name: 'crediblecs-api',
+      name: process.env.APP_NAME || 'crediblecs-api',
       script: 'server.js',
       instances: 1,
       exec_mode: 'fork',
