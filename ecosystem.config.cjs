@@ -9,6 +9,10 @@ module.exports = {
         NODE_ENV: 'development',
         PORT: 3001
       },
+      env_development: {
+        NODE_ENV: 'development',
+        PORT: 3001
+      },
       env_testing: {
         NODE_ENV: 'testing',
         PORT: 3001
