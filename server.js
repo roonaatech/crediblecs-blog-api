@@ -16,17 +16,25 @@ async function startServer() {
     await testConnection();
     startPostScheduler();
 
-    const certPath = '/apps/crediblecs-api/src/certs';
+    const certPath = process.env.CERT_PATH || '/apps/crediblecs-api/dev/certs';
     const isDevelopment = env.nodeEnv === 'development';
     const isTesting = env.nodeEnv === 'testing';
     const isProduction = env.nodeEnv === 'production';
 
-    // Check if certificates exist (only for non-local dev)
+    // Check if certificates exist
     let httpsOptions = null;
-    if (!isDevelopment && fs.existsSync(`${certPath}/server.key`) && fs.existsSync(`${certPath}/server.crt`)) {
+    
+    // Support both custom names and let's encrypt standard names
+    const keyFile = fs.existsSync(`${certPath}/server.key`) ? `${certPath}/server.key` : 
+                   fs.existsSync(`${certPath}/privkey.pem`) ? `${certPath}/privkey.pem` : null;
+    
+    const certFile = fs.existsSync(`${certPath}/server.crt`) ? `${certPath}/server.crt` : 
+                    fs.existsSync(`${certPath}/fullchain.pem`) ? `${certPath}/fullchain.pem` : null;
+
+    if (keyFile && certFile) {
       httpsOptions = {
-        key: fs.readFileSync(`${certPath}/server.key`),
-        cert: fs.readFileSync(`${certPath}/server.crt`),
+        key: fs.readFileSync(keyFile),
+        cert: fs.readFileSync(certFile),
       };
       // Add CA if it exists
       if (fs.existsSync(`${certPath}/server-ca.crt`)) {
