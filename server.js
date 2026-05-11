@@ -16,20 +16,20 @@ async function startServer() {
     await testConnection();
     startPostScheduler();
 
-    const certPath = process.env.CERT_PATH || '/apps/crediblecs-api/dev/certs';
+    const certPath = process.env.CERT_PATH || '/apps/crediblecs-api/certs';
     const isDevelopment = env.nodeEnv === 'development';
     const isTesting = env.nodeEnv === 'testing';
     const isProduction = env.nodeEnv === 'production';
 
     // Check if certificates exist
     let httpsOptions = null;
-    
+
     // Support both custom names and let's encrypt standard names
-    const keyFile = fs.existsSync(`${certPath}/server.key`) ? `${certPath}/server.key` : 
-                   fs.existsSync(`${certPath}/privkey.pem`) ? `${certPath}/privkey.pem` : null;
-    
-    const certFile = fs.existsSync(`${certPath}/server.crt`) ? `${certPath}/server.crt` : 
-                    fs.existsSync(`${certPath}/fullchain.pem`) ? `${certPath}/fullchain.pem` : null;
+    const keyFile = fs.existsSync(`${certPath}/server.key`) ? `${certPath}/server.key` :
+      fs.existsSync(`${certPath}/privkey.pem`) ? `${certPath}/privkey.pem` : null;
+
+    const certFile = fs.existsSync(`${certPath}/server.crt`) ? `${certPath}/server.crt` :
+      fs.existsSync(`${certPath}/fullchain.pem`) ? `${certPath}/fullchain.pem` : null;
 
     if (keyFile && certFile) {
       httpsOptions = {
