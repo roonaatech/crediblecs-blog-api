@@ -127,6 +127,15 @@ curl http://localhost:3001/api/v1/health
 | `POST` | `/api/v1/admin/tags` | Create tag |
 | `DELETE` | `/api/v1/admin/tags/:id` | Delete tag |
 
+### Contact Submission Endpoints
+
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| `POST` | `/api/v1/contact` | None | Submit a new contact/lead form |
+| `GET` | `/api/v1/contact/submissions` | JWT Token | View submissions in Admin dashboard |
+| `GET` | `/api/v1/contact/api-submissions` | API Key (`x-api-key`) | Fetch submissions (external access, paginated) |
+| `PATCH`| `/api/v1/contact/api-submissions/:id/status` | API Key (`x-api-key`) | Update submission status (e.g. to `consumed`) |
+
 ### Query Parameters for `/api/v1/posts`
 
 | Parameter | Type | Default | Description |

@@ -42,6 +42,9 @@ const env = {
     rateLimitMax: parseInt(process.env.RATE_LIMIT_MAX || '100', 10),
   },
 
+  // API Key for Secure Exporters
+  apiKey: process.env.CONTACT_API_KEY || '',
+
   // Frontend
   frontendUrl: process.env.FRONTEND_URL || 'http://localhost:4321',
   frontendRebuildWebhook: process.env.FRONTEND_REBUILD_WEBHOOK || '',
