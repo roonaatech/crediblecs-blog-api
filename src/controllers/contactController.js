@@ -11,7 +11,7 @@ try {
 }
 
 export const submitContact = async (req, res) => {
-  const { name, phone, email, service, message } = req.body;
+  const { name, phone, email, service, message, website } = req.body;
 
   if (!name || !phone || !email) {
     return res.status(400).json({ success: false, message: 'Name, phone, and email are required.' });
@@ -20,8 +20,8 @@ export const submitContact = async (req, res) => {
   try {
     // 1. Save to database
     const [result] = await pool.query(
-      `INSERT INTO contact_submissions (name, email, phone, service, message) VALUES (?, ?, ?, ?, ?)`,
-      [name, email, phone, service || null, message || null]
+      `INSERT INTO contact_submissions (name, email, phone, service, message, website) VALUES (?, ?, ?, ?, ?, ?)`,
+      [name, email, phone, service || null, message || null, website || null]
     );
 
     // 2. Try sending email if SMTP is configured
@@ -89,7 +89,7 @@ export const getSubmissions = async (req, res) => {
 
 export const getSubmissionsApi = async (req, res) => {
   try {
-    const { status, service, search, sortBy, sortOrder } = req.query;
+    const { status, service, search, sortBy, sortOrder, website } = req.query;
     const { page, limit, offset } = parsePagination(req.query, 10, 50);
 
     let whereClauses = [];
@@ -111,9 +111,14 @@ export const getSubmissionsApi = async (req, res) => {
       queryParams.push(searchWildcard, searchWildcard, searchWildcard);
     }
 
+    if (website) {
+      whereClauses.push('website = ?');
+      queryParams.push(website);
+    }
+
     const whereStr = whereClauses.length > 0 ? `WHERE ${whereClauses.join(' AND ')}` : '';
 
-    const allowedSortFields = ['id', 'name', 'email', 'created_at', 'status', 'service'];
+    const allowedSortFields = ['id', 'name', 'email', 'created_at', 'status', 'service', 'website'];
     const resolvedSortBy = allowedSortFields.includes(sortBy) ? sortBy : 'created_at';
     const resolvedSortOrder = sortOrder && sortOrder.toUpperCase() === 'ASC' ? 'ASC' : 'DESC';
 
@@ -122,7 +127,7 @@ export const getSubmissionsApi = async (req, res) => {
     const total = countRows[0].total;
 
     const fetchSql = `
-      SELECT id, name, email, phone, service, message, status, created_at, updated_at
+      SELECT id, name, email, phone, service, message, website, status, created_at, updated_at
       FROM contact_submissions
       ${whereStr}
       ORDER BY ${resolvedSortBy} ${resolvedSortOrder}
@@ -165,7 +170,7 @@ export const updateSubmissionStatusApi = async (req, res) => {
     await pool.query(updateSql, [status, id]);
 
     // Fetch the updated record
-    const fetchSql = 'SELECT id, name, email, phone, service, message, status, created_at, updated_at FROM contact_submissions WHERE id = ?';
+    const fetchSql = 'SELECT id, name, email, phone, service, message, website, status, created_at, updated_at FROM contact_submissions WHERE id = ?';
     const [updatedRows] = await pool.query(fetchSql, [id]);
 
     return success(res, updatedRows[0]);

@@ -41,13 +41,18 @@ const router = Router();
  *               message:
  *                 type: string
  *                 example: Need compliance review.
+ *               website:
+ *                 type: string
+ *                 example: crediblecs.com
  *     responses:
  *       201:
  *         description: Submission successful
  *       400:
  *         description: Name, phone, and email are required
+ *       401:
+ *         description: Invalid or missing API key
  */
-router.post('/', submitContact);
+router.post('/', authenticateApiKey, submitContact);
 
 /**
  * @openapi
@@ -118,6 +123,11 @@ router.get('/submissions', authenticate, getSubmissions);
  *           type: string
  *           enum: [ASC, DESC]
  *           default: DESC
+ *       - in: query
+ *         name: website
+ *         schema:
+ *           type: string
+ *         description: Filter by website source
  *     responses:
  *       200:
  *         description: Paginated contact submissions
