@@ -225,7 +225,7 @@ CREATE TABLE IF NOT EXISTS contact_submissions (
   phone        VARCHAR(50)  NOT NULL,
   service      VARCHAR(100) NULL,
   message      TEXT         NULL,
-  status       ENUM('new', 'contacted', 'resolved', 'consumed') DEFAULT 'new',
+  status       ENUM('new', 'contacted', 'resolved', 'consumed', 'junk') DEFAULT 'new',
   created_at   TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at   TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB;

@@ -147,7 +147,7 @@ export const updateSubmissionStatusApi = async (req, res) => {
     return sendError(res, 'Status is required.', 400);
   }
 
-  const validStatuses = ['new', 'contacted', 'resolved', 'consumed'];
+  const validStatuses = ['new', 'contacted', 'resolved', 'consumed', 'junk'];
   if (!validStatuses.includes(status)) {
     return sendError(res, `Invalid status value. Allowed values: ${validStatuses.join(', ')}`, 400);
   }

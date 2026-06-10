@@ -96,7 +96,7 @@ router.get('/submissions', authenticate, getSubmissions);
  *         name: status
  *         schema:
  *           type: string
- *           enum: [new, contacted, resolved, consumed]
+ *           enum: [new, contacted, resolved, consumed, junk]
  *       - in: query
  *         name: service
  *         schema:
@@ -158,7 +158,7 @@ router.get('/api-submissions', authenticateApiKey, getSubmissionsApi);
  *             properties:
  *               status:
  *                 type: string
- *                 enum: [new, contacted, resolved, consumed]
+ *                 enum: [new, contacted, resolved, consumed, junk]
  *                 example: consumed
  *     responses:
  *       200:
