@@ -6,7 +6,7 @@ import env from '../config/env.js';
  */
 export const apiLimiter = rateLimit({
   windowMs: env.api.rateLimitWindowMs,
-  max: env.api.rateLimitMax,
+  max: env.isDev ? 100000 : env.api.rateLimitMax,
   standardHeaders: true,
   legacyHeaders: false,
   message: {

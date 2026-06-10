@@ -41,6 +41,14 @@ export const getSettings = async (req, res) => {
             body: 'You have received a new request from {{name}}.\nPhone: {{phone}}\nEmail: {{email}}\nService: {{service}}'
         };
     }
+    if (!settings.webinar) {
+        settings.webinar = {
+            topic: '',
+            link: '',
+            schedule: '',
+            enabled: false
+        };
+    }
 
     res.json({ success: true, data: settings });
   } catch (error) {
@@ -110,4 +118,57 @@ export const testSmtp = async (req, res) => {
         console.error('SMTP test error:', error);
         res.status(500).json({ success: false, message: error.message || 'Failed to authenticate or send email.' });
     }
+};
+
+export const getPublicOpenHours = async (req, res) => {
+  try {
+    const [rows] = await pool.query('SELECT setting_value FROM system_settings WHERE setting_key = "openHours"');
+    if (rows.length === 0) {
+      return res.json({
+        success: true,
+        data: {
+          description: '',
+          link: '',
+          startTime: '16:00',
+          endTime: '17:00',
+          enabled: false
+        }
+      });
+    }
+
+    let val = rows[0].setting_value;
+    if (typeof val === 'string') {
+      try { val = JSON.parse(val); } catch(e){}
+    }
+
+    res.json({ success: true, data: val });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const getPublicWebinar = async (req, res) => {
+  try {
+    const [rows] = await pool.query('SELECT setting_value FROM system_settings WHERE setting_key = "webinar"');
+    if (rows.length === 0) {
+      return res.json({
+        success: true,
+        data: {
+          topic: '',
+          link: '',
+          schedule: '',
+          enabled: false
+        }
+      });
+    }
+
+    let val = rows[0].setting_value;
+    if (typeof val === 'string') {
+      try { val = JSON.parse(val); } catch(e){}
+    }
+
+    res.json({ success: true, data: val });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
 };
