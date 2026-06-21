@@ -230,3 +230,23 @@ CREATE TABLE IF NOT EXISTS contact_submissions (
   created_at   TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at   TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB;
+
+-- ============================================
+-- 12. WEBSITE_EMAIL_SETTINGS
+-- ============================================
+CREATE TABLE IF NOT EXISTS website_email_settings (
+  id              BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  website         VARCHAR(255)    NOT NULL UNIQUE,
+  sender_email    VARCHAR(255)    NOT NULL,
+  recipient_email VARCHAR(255)    NOT NULL,
+  email_subject   VARCHAR(255)    NULL,
+  email_body      TEXT            NULL,
+  smtp_host       VARCHAR(255)    NULL,
+  smtp_port       INT             NULL,
+  smtp_user       VARCHAR(255)    NULL,
+  smtp_pass       VARCHAR(255)    NULL,
+  created_at      TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at      TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  INDEX idx_website_email_settings_website (website)
+) ENGINE=InnoDB;
+

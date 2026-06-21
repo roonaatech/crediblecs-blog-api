@@ -174,3 +174,16 @@ INSERT INTO post_tags (post_id, tag_id) VALUES
 (4, 2),   -- ESI Registration
 (4, 18),  -- Chennai
 (4, 20);  -- Startup Compliance
+
+-- ============================================
+-- 6. SEED WEBSITE_EMAIL_SETTINGS
+-- ============================================
+INSERT INTO website_email_settings (website, sender_email, recipient_email, email_subject, email_body) VALUES
+(
+  'CCS',
+  'noreply@crediblecs.com',
+  'leads@crediblecs.com',
+  'New Contact Submission - {{website}}',
+  'You have received a new contact submission on {{website}} from {{name}}.\n\nName: {{name}}\nPhone: {{phone}}\nEmail: {{email}}\nService: {{service}}\nMessage: {{message}}\n\nSource Website: {{website}}'
+);
+

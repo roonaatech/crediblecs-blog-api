@@ -1,5 +1,13 @@
 import pool from '../config/database.js';
 
+let nodemailer;
+try {
+  const nodemailerModule = await import('nodemailer');
+  nodemailer = nodemailerModule.default || nodemailerModule;
+} catch (e) {
+  console.warn('nodemailer not installed. Emails will not be sent.');
+}
+
 
 export const getSettings = async (req, res) => {
   try {
@@ -77,10 +85,40 @@ export const updateSettings = async (req, res) => {
 };
 
 export const testSmtp = async (req, res) => {
-    return res.status(400).json({
-        success: false,
-        message: 'SMTP email sending feature has been disabled.'
-    });
+    try {
+        const { smtp } = req.body;
+        if (!smtp || !smtp.host || !smtp.user || !smtp.pass) {
+            return res.status(400).json({ success: false, message: 'Incomplete SMTP configuration for testing.' });
+        }
+        
+        if (!nodemailer) {
+            return res.status(500).json({ success: false, message: 'nodemailer package is not installed. Please install it to send emails.' });
+        }
+        
+        const { host, port, user, pass, senderEmail, recipientEmail } = smtp;
+        const transporter = nodemailer.createTransport({
+            host,
+            port: parseInt(port) || 587,
+            secure: parseInt(port) === 465,
+            auth: { user, pass }
+        });
+        
+        // Verify connection setup first
+        await transporter.verify();
+        
+        // Send actual test email
+        await transporter.sendMail({
+            from: senderEmail || user, 
+            to: recipientEmail || user,
+            subject: 'Test SMTP Connection - CredibleCS Site',
+            text: 'If you are reading this email, your SMTP configuration is successfully working!'
+        });
+        
+        res.json({ success: true, message: 'SMTP Test Successful! Email sent to your configured address.' });
+    } catch (error) {
+        console.error('SMTP test error:', error);
+        res.status(500).json({ success: false, message: error.message || 'Failed to authenticate or send email.' });
+    }
 };
 
 export const getPublicOpenHours = async (req, res) => {

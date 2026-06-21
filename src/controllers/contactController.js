@@ -2,6 +2,14 @@ import pool from '../config/database.js';
 import { parsePagination, buildPagination } from '../utils/pagination.js';
 import { success, paginated, error as sendError } from '../utils/response.js';
 
+let nodemailer;
+try {
+  const nodemailerModule = await import('nodemailer');
+  nodemailer = nodemailerModule.default || nodemailerModule;
+} catch (e) {
+  console.warn('nodemailer not installed. Emails will not be sent.');
+}
+
 
 export const submitContact = async (req, res) => {
   const { name, phone, email, service, message, website } = req.body;
@@ -16,6 +24,83 @@ export const submitContact = async (req, res) => {
       `INSERT INTO contact_submissions (name, email, phone, service, message, website) VALUES (?, ?, ?, ?, ?, ?)`,
       [name, email, phone, service || null, message || null, website || null]
     );
+
+    // 2. Try sending email if configured for the website
+    try {
+        const submissionWebsite = website || 'CCS';
+        const [websiteSettingsRows] = await pool.query(
+            'SELECT * FROM website_email_settings WHERE website = ?',
+            [submissionWebsite]
+        );
+        
+        if (nodemailer && websiteSettingsRows.length > 0) {
+            const wSettings = websiteSettingsRows[0];
+            
+            // Check if website-specific SMTP is defined, otherwise fall back to global SMTP in system_settings
+            let smtpConfig = null;
+            if (wSettings.smtp_host && wSettings.smtp_user && wSettings.smtp_pass) {
+                smtpConfig = {
+                    host: wSettings.smtp_host,
+                    port: wSettings.smtp_port,
+                    user: wSettings.smtp_user,
+                    pass: wSettings.smtp_pass
+                };
+            } else {
+                // Fetch global SMTP configuration from system_settings
+                const [globalSettingsRows] = await pool.query(
+                    'SELECT setting_value FROM system_settings WHERE setting_key = "smtp"'
+                );
+                if (globalSettingsRows.length > 0) {
+                    let val = globalSettingsRows[0].setting_value;
+                    if (typeof val === 'string') {
+                        try { val = JSON.parse(val); } catch(e){}
+                    }
+                    if (val && val.host && val.user && val.pass) {
+                        smtpConfig = val;
+                    }
+                }
+            }
+
+            if (smtpConfig) {
+                const transporter = nodemailer.createTransport({
+                    host: smtpConfig.host,
+                    port: parseInt(smtpConfig.port) || 587,
+                    secure: parseInt(smtpConfig.port) === 465,
+                    auth: {
+                        user: smtpConfig.user,
+                        pass: smtpConfig.pass
+                    }
+                });
+
+                const templateStr = wSettings.email_body || 'New contact submission on {{website}} from {{name}}.\nPhone: {{phone}}\nEmail: {{email}}\nService: {{service}}\nMessage: {{message}}';
+                const subjectStr = wSettings.email_subject || 'New Contact Submission - {{website}}';
+
+                // Simple template replacement
+                const replacePlaceholders = (str) => {
+                    return str
+                        .replace(/{{name}}/g, name || 'N/A')
+                        .replace(/{{phone}}/g, phone || 'N/A')
+                        .replace(/{{email}}/g, email || 'N/A')
+                        .replace(/{{service}}/g, service || 'N/A')
+                        .replace(/{{message}}/g, message || 'N/A')
+                        .replace(/{{website}}/g, submissionWebsite);
+                };
+
+                const emailBody = replacePlaceholders(templateStr);
+                const subject = replacePlaceholders(subjectStr);
+
+                await transporter.sendMail({
+                    from: wSettings.sender_email || smtpConfig.senderEmail || smtpConfig.user,
+                    to: wSettings.recipient_email || smtpConfig.recipientEmail || smtpConfig.user,
+                    subject: subject,
+                    text: emailBody
+                });
+            }
+        }
+    } catch (emailErr) {
+        console.error('Error sending email:', emailErr);
+        // Do not fail the submission if email fails
+    }
 
 
     res.status(201).json({ success: true, message: 'Submission successful' });
